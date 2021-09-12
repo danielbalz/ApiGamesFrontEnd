@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja de games</title>
+    <hr>
+    <h4>Lista de Games</h4>
+    <ul id="gamesList"></ul>
+
+    <hr>
+    <h4>Cadastrar Game</h4>
+    <input type="text" name="name" id="name" placeholder="Nome">
+    <input type="number" name="year" id="year" placeholder="Ano">
+    <button type="button" onclick="createGame();">Salvar</button>
+
+    <hr>
+    <h4>Editar Game</h4>
+    <input type="hidden" name="idEdit" id="idEdit">
+    <input type="text" name="nameEdit" id="nameEdit" placeholder="Nome">
+    <input type="number" name="yearEdit" id="yearEdit" placeholder="Ano">
+    <button type="button" onclick="updateGame();">Salvar</button>
+</head>
+
+<body>
+    
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+
+    function validateYear(year) {
+        if(year > new Date().getFullYear()) {
+            return 'O ano informado não pode ser superior ao ano atual.';
+        }
+
+        return '';
+    }
+
+    function createGame() {
+        var name = document.getElementById("name").value;
+        var year = document.getElementById("year").value;
+
+        if(name === '') {
+            alert('Nome é obrigatório.');
+            return;
+        } else if(year === '') {
+            alert('Ano é obrigatório.');
+            return;
+        }
+
+        var retValidateYear = validateYear(year);
+
+        if(retValidateYear) {
+            alert(retValidateYear);
+        } else {
+            var game = {
+                name: name,
+                year: year
+            };
+
+            axios.post("http://localhost:3000/game", game).then(response => {
+
+                if(response.status == 200) {
+                    alert("Game cadastrado");
+                }
+
+            }).catch(error => {
+                console.log(error);
+            });
+        }
+    }
+
+    function deleteGame(listItem) {
+        var id = listItem.getAttribute("data-id");
+        axios.delete("http://localhost:3000/game/" + id).then(response => {
+            if(response.status == 200) {
+                alert("Game deletado");
+            }
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+
+    function loadFormData(listItem) {
+        var id = listItem.getAttribute("data-id");
+        var name = listItem.getAttribute("data-name");
+        var year = listItem.getAttribute("data-year");
+
+        document.getElementById("idEdit").value = id;
+        document.getElementById("nameEdit").value = name;
+        document.getElementById("yearEdit").value = year;
+    }
+
+    function updateGame() {
+        var id = document.getElementById("idEdit").value;
+        var name = document.getElementById("nameEdit").value;
+        var year = document.getElementById("yearEdit").value;
+
+        if(name === '') {
+            alert('Nome é obrigatório.');
+            return;
+        } else if(year === '') {
+            alert('Ano é obrigatório.');
+            return;
+        }
+
+        var retValidateYear = validateYear(year);
+
+        if(retValidateYear) {
+            alert(retValidateYear);
+        } else {
+            var game = {
+                name: name,
+                year: year
+            };
+
+            axios.put("http://localhost:3000/game/" + id, game).then(response => {
+
+                if(response.status == 200) {
+                    alert("Game atualizado");
+                }
+
+            }).catch(error => {
+                console.log(error);
+            });
+        }
+    }
+
+    axios.get("http://localhost:3000/games").then(response => {
+
+        var gamesList = document.getElementById("gamesList");
+        var games = response.data;
+
+        games.forEach(game => {
+            var item = document.createElement("li");
+            item.setAttribute("data-id", game.id);
+            item.setAttribute("data-name", game.name);
+            item.setAttribute("data-year", game.year);
+            item.innerHTML = game.name + ", ano de lançamento: " + game.year;
+
+            var deleteBtn = document.createElement("button");
+            deleteBtn.innerHTML = "Deletar";
+            deleteBtn.addEventListener("click", function() {
+                deleteGame(item);
+            });
+
+            var editBtn = document.createElement("button");
+            editBtn.innerHTML = "Editar";
+            editBtn.addEventListener("click", function() {
+                loadFormData(item);
+            });
+
+            item.appendChild(deleteBtn);
+            item.appendChild(editBtn);
+
+            gamesList.appendChild(item);
+        });
+
+    }).catch(error => {
+        console.log(error);
+    });
+
+</script>
+</html>
